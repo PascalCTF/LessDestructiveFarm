@@ -1,4 +1,4 @@
-import { Column, Model, Table, Index } from 'sequelize-typescript';
+import { Column, Model, Table, Index, DataType } from 'sequelize-typescript';
 import { Field, ObjectType } from 'type-graphql';
 
 export type FlagState = 'QUEUED' | 'SKIPPED' | 'ACCEPTED' | 'REJECTED';
@@ -7,15 +7,15 @@ export type FlagState = 'QUEUED' | 'SKIPPED' | 'ACCEPTED' | 'REJECTED';
 @Table
 export default class Flag extends Model<Flag> {
   @Field()
-  @Column({ primaryKey: true, unique: true })
+  @Column({ primaryKey: true, unique: true, type: DataType.TEXT })
   flag!: string;
 
   @Field()
-  @Column({ allowNull: false })
+  @Column({ allowNull: false, type: DataType.TEXT })
   sploit!: string;
 
   @Field()
-  @Column({ allowNull: false })
+  @Column({ allowNull: false, type: DataType.TEXT })
   team!: string;
 
   @Field()
@@ -32,6 +32,6 @@ export default class Flag extends Model<Flag> {
   status!: FlagState;
 
   @Field({ nullable: true })
-  @Column({ allowNull: true })
+  @Column({ allowNull: true, type: DataType.TEXT })
   checksystem_response!: string;
 }
