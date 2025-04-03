@@ -20,6 +20,7 @@ export default class Flag extends Model<Flag> {
 
   @Field()
   @Column({ allowNull: false })
+  @Index({ name: 'Flag_status_timestamp' })
   timestamp!: Date;
 
   @Field({ nullable: true })
@@ -27,6 +28,7 @@ export default class Flag extends Model<Flag> {
   @Index({
     where: { status: 'QUEUED' }
   })
+  @Index({ name: 'Flag_status_timestamp' })
   status!: FlagState;
 
   @Field({ nullable: true })
