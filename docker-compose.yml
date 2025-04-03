@@ -5,6 +5,7 @@ services:
     build: .
     depends_on:
       - postgres
+    restart: unless-stopped
     environment:
       - DB_HOST=postgres
       - DB_NAME=farm
@@ -18,6 +19,7 @@ services:
 
   postgres:
     image: postgres:12
+    restart: unless-stopped
     environment:
       - POSTGRES_DB=farm
       - POSTGRES_USER=postgres
