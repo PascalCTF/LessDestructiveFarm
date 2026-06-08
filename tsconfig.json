@@ -9,20 +9,36 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "typeRoots": ["./typings"],
+    "typeRoots": [
+      "./typings"
+    ],
     "allowJs": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "jsx": "preserve",
-    "module": "esnext",
+    "jsx": "react-jsx",
+    "module": "commonjs",
     "isolatedModules": true,
     "skipLibCheck": true,
     "strict": false,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": false
+    "noEmit": false,
+    "incremental": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "ignoreDeprecations": "6.0"
   },
-  "exclude": ["node_modules"],
-  "include": ["typings/**/*.d.ts", "src/**/*.ts", "src/**/*.tsx"],
-  "files": ["src/server.ts"]
+  "exclude": [
+    "node_modules"
+  ],
+  "include": [
+    "typings/**/*.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "files": [
+    "src/server.ts"
+  ]
 }

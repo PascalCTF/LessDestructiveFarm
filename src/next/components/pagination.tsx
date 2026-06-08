@@ -1,106 +1,94 @@
-import React, { Component } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Router from 'next/router';
+import { useCallback, useEffect, useState } from 'react';
 
 interface Props {
   currentPage: number;
   totalPages: number;
-  onPageSelected: (page: number) => any;
-}
-
-interface State {
-  currentPageText: string;
 }
 
 //Must be even
 const MAX_PAGE_TO_SHOW = 5;
 
-class Pagination extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
+const Pagination = ({ currentPage, totalPages }: Props) => {
+  const query = useSearchParams();
+  const [currentPageText, setCurrentPageText] = useState(currentPage.toString());
 
-    this.state = {
-      currentPageText: props.currentPage.toString()
-    };
+  useEffect(() => {
+    setCurrentPageText(currentPage.toString());
+  }, [currentPage]);
 
-    this.onCurrentPageInputChanged = this.onCurrentPageInputChanged.bind(this);
-    this.onCurrentPageKeyDown = this.onCurrentPageKeyDown.bind(this);
-  }
+  const onPageSelected = useCallback(
+    (n: number) => {
+      const current = new URLSearchParams(Array.from(query.entries())); // -> has to use this form
 
-  componentDidUpdate(prevProps: Props) {
-    //If searchParams object changed (needed for update on navigation)
-    if (this.props.currentPage !== prevProps.currentPage)
-      this.setState({
-        currentPageText: this.props.currentPage.toString()
-      });
-  }
+      current.set('page', n.toString());
 
-  onCurrentPageInputChanged(event: any) {
-    this.setState({
-      currentPageText: event.target.value
-    });
-  }
+      Router.push(`/?${current.toString()}`);
+    },
+    [query]
+  );
 
-  onCurrentPageKeyDown(event: any) {
-    if (event.key === 'Enter') this.props.onPageSelected(parseInt(this.state.currentPageText, 10));
-  }
+  const onCurrentPageKeyDown = useCallback(
+    (event: any) => {
+      if (event.key !== 'Enter') return;
+      onPageSelected(parseInt(currentPageText, 10));
+    },
+    [currentPageText, onPageSelected]
+  );
 
-  render() {
-    const half = Math.ceil(MAX_PAGE_TO_SHOW / 2);
-    const firstShown = Math.max(1, this.props.currentPage - half);
-    const lastShown = Math.min(this.props.totalPages, this.props.currentPage + half);
+  const half = Math.ceil(MAX_PAGE_TO_SHOW / 2);
+  const firstShown = Math.max(1, currentPage - half);
+  const lastShown = Math.min(totalPages, currentPage + half);
 
-    const pageButtons = [];
+  const pageButtons = [];
 
-    if (firstShown > 1)
+  if (firstShown > 1)
+    pageButtons.push(
+      <li className="page-item" key={1}>
+        <div className="page-link" onClick={() => onPageSelected(1)}>
+          «
+        </div>
+      </li>
+    );
+
+  for (let i = firstShown; i < lastShown + 1; i++) {
+    let classes = 'page-item';
+    if (i == currentPage) {
       pageButtons.push(
-        <li className="page-item" key={1}>
-          <div className="page-link" onClick={() => this.props.onPageSelected(1)}>
-            «
+        <li className="page-item active" key={i}>
+          <div className="page-link pagination-current-page-container">
+            <input
+              type="text"
+              className="pagination-current-page-input"
+              onChange={e => setCurrentPageText(e.target.value)}
+              onKeyDown={onCurrentPageKeyDown}
+              value={currentPageText}
+            />
           </div>
         </li>
       );
-
-    for (let i = firstShown; i < lastShown + 1; i++) {
-      let classes = 'page-item';
-      if (i == this.props.currentPage) {
-        pageButtons.push(
-          <li className="page-item active" key={i}>
-            <div className="page-link pagination-current-page-container">
-              <input
-                type="text"
-                className="pagination-current-page-input"
-                onChange={this.onCurrentPageInputChanged}
-                onKeyDown={this.onCurrentPageKeyDown}
-                value={this.state.currentPageText}
-              />
-            </div>
-          </li>
-        );
-      } else {
-        pageButtons.push(
-          <li className={classes} key={i}>
-            <div className="page-link" onClick={() => this.props.onPageSelected(i)}>
-              {i}
-            </div>
-          </li>
-        );
-      }
+    } else {
+      pageButtons.push(
+        <li className={classes} key={i}>
+          <div className="page-link" onClick={() => onPageSelected(i)}>
+            {i}
+          </div>
+        </li>
+      );
     }
-
-    if (lastShown < this.props.totalPages)
-      pageButtons.push(
-        <li className="page-item" key={this.props.totalPages}>
-          <div
-            className="page-link"
-            onClick={() => this.props.onPageSelected(this.props.totalPages)}
-          >
-            »
-          </div>
-        </li>
-      );
-
-    return <ul className="pagination pagination-sm">{pageButtons}</ul>;
   }
-  S;
-}
+
+  if (lastShown < totalPages)
+    pageButtons.push(
+      <li className="page-item" key={totalPages}>
+        <div className="page-link" onClick={() => onPageSelected(totalPages)}>
+          »
+        </div>
+      </li>
+    );
+
+  return <ul className="pagination pagination-sm">{pageButtons}</ul>;
+};
 
 export default Pagination;

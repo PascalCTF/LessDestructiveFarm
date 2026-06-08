@@ -1,20 +1,18 @@
-import moment from 'moment';
-import React, { StatelessComponent } from 'react';
+import { format } from 'date-fns';
 import FlagModel from '../../lib/models/flag';
+import { InferAttributes } from 'sequelize';
 
-interface Props {
-  flag: FlagModel;
-}
-
-const FlagRow: StatelessComponent<Props> = ({ flag }) => (
-  <tr>
-    <th scope="row">{flag.sploit}</th>
-    <td>{flag.team}</td>
-    <td>{flag.flag}</td>
-    <td>{moment(flag.timestamp).format('YYYY-MM-DD HH:mm:ss')}</td>
-    <td>{flag.status}</td>
-    <td>{flag.checksystem_response}</td>
-  </tr>
-);
+const FlagRow = ({ flag }: { flag: InferAttributes<FlagModel> }) => {
+  return (
+    <tr>
+      <th scope="row">{flag.sploit}</th>
+      <td>{flag.team}</td>
+      <td>{flag.flag}</td>
+      <td>{format(new Date(flag.timestamp), 'yyyy-MM-dd HH:mm:ss')}</td>
+      <td>{flag.status}</td>
+      <td>{flag.checksystem_response}</td>
+    </tr>
+  );
+};
 
 export default FlagRow;

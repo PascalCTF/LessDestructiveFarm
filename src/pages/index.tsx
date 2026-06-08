@@ -1,130 +1,100 @@
-import Head from 'next/head';
 import Router from 'next/router';
-import React, { Component } from 'react';
-import { GameInfo, SearchParams, SearchValues } from 'src/next/lib/types';
-import FlagModel from '../lib/models/flag';
+import { useCallback } from 'react';
 import FlagCounter from '../next/components/flagCounter';
 import FlagsTable from '../next/components/flagsTable';
 import ManualSubmission from '../next/components/manualSubmission';
-import NavBar from '../next/components/navBar';
 import Pagination from '../next/components/pagination';
 import Search from '../next/components/search';
-import { apolloClient, queries } from '../next/lib/graphql';
-
-interface Props {
-  query: any;
-  totalFlags: number;
-  searchParams: SearchParams;
-  searchValues: SearchValues;
-  flags?: FlagModel[];
-  gameInfo: GameInfo;
-}
+import { queries } from '../next/lib/graphql';
+import { useSearchParams } from 'next/navigation';
+import { useQuery } from '@apollo/client/react';
 
 const FLAGS_PER_PAGE = 30;
 
-export default class extends Component<Props> {
-  static async getInitialProps({ req, res, query }): Promise<Props> {
-    try {
-      if (!query.page) query.page = '1';
+const Index = () => {
+  const query = useSearchParams();
 
-      const offset = (parseInt(query.page, 10) - 1) * FLAGS_PER_PAGE;
+  const currentPage = parseInt(query.get('page') ?? '1', 10);
+  const offset = (currentPage - 1) * FLAGS_PER_PAGE;
+  const sploit = query.get('sploit') ?? undefined;
+  const team = query.get('team') ?? undefined;
+  const status = query.get('status') ?? undefined;
+  const flag = query.get('flag') ?? undefined;
+  const since = query.get('since') ?? undefined;
+  const until = query.get('until') ?? undefined;
+  const checksystem_response = query.get('checksystem_response') ?? undefined;
 
-      const { sploit, team, status, flag, since, until, checksystem_response } = query;
-
-      const result = await apolloClient.query({
-        query: queries.GET_ALL_DATA,
-        variables: {
-          offset,
-          limit: FLAGS_PER_PAGE,
-          sploit,
-          team,
-          status,
-          flag,
-          since: new Date(since),
-          until: new Date(until),
-          checksystem_response
-        }
-      });
-
-      if (result.errors) throw JSON.stringify(result.errors);
-
-      return {
-        totalFlags: parseInt(result.data.getFlagCount, 10),
-        flags: result.data.getFlags,
-        searchParams: query,
-        searchValues: result.data.getSearchValues,
-        gameInfo: result.data.getGameInfo,
-        query
-      };
-    } catch (e) {
-      if (e.networkError && e.networkError.result)
-        console.error(JSON.stringify(e.networkError.result));
-      else console.error(e);
+  const { loading, error, data, refetch } = useQuery(queries.GET_ALL_DATA, {
+    variables: {
+      offset,
+      limit: FLAGS_PER_PAGE,
+      sploit,
+      team,
+      status,
+      flag,
+      since: new Date(since),
+      until: new Date(until),
+      checksystem_response
     }
-  }
+  });
 
-  resetSearch() {
+  const refreshData = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  const resetSearch = useCallback(() => {
     Router.push('/');
-  }
+  }, []);
 
-  updateQuery(newElements: any, resetPage: boolean = false) {
-    const query = {
-      ...this.props.query,
-      ...newElements
-    };
+  const totalFlags = parseInt(data?.getFlagCount, 10);
+  const pages = Math.ceil(totalFlags / FLAGS_PER_PAGE);
 
-    if (resetPage) query.page = 1;
+  return (
+    <>
+      <div className="container mt-4">
+        <div className="row mb-4">
+          <Search
+            searchParams={{
+              sploit,
+              team,
+              status,
+              flag,
+              since,
+              until,
+              checksystem_response
+            }}
+            searchValues={
+              data?.getSearchValues ?? {
+                sploits: [],
+                teams: [],
+                statuses: []
+              }
+            }
+            onReset={() => resetSearch()}
+          />
 
-    //Remove empty params
-    for (const item in query) if (!query[item]) delete query[item];
-
-    Router.push({ pathname: '/', query });
-  }
-
-  render() {
-    const { totalFlags, flags, query } = this.props;
-
-    const pages = Math.ceil(totalFlags / FLAGS_PER_PAGE);
-    const currentPage = parseInt(query.page, 10);
-
-    return (
-      <>
-        <Head>
-          <title>Less Destructive Farm</title>
-          <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-        </Head>
-        <NavBar />
-        <div className="container mt-4">
-          <div className="row mb-4">
-            <Search
-              gameInfo={this.props.gameInfo}
-              searchParams={this.props.searchParams}
-              searchValues={this.props.searchValues}
-              onSearch={(params: any) => this.updateQuery(params, true)}
-              onReset={() => this.resetSearch()}
-            />
-
-            <ManualSubmission
-              gameInfo={this.props.gameInfo}
-              onSubmit={() => this.updateQuery({})}
-            />
-          </div>
-          <div className="search-results">
-            <FlagCounter flagCount={totalFlags} />
-            <Pagination
-              totalPages={pages}
-              currentPage={currentPage}
-              onPageSelected={(page: number) => this.updateQuery({ page })}
-            />
-            <FlagsTable flags={flags} />
-            <Pagination
-              totalPages={pages}
-              currentPage={currentPage}
-              onPageSelected={(page: number) => this.updateQuery({ page })}
-            />
-          </div>
+          <ManualSubmission
+            gameInfo={data?.getGameInfo ?? { flagFormat: '' }}
+            onSubmit={refreshData}
+          />
         </div>
-      </>
-    );
-  }
-}
+        <div className="search-results">
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p>Error : {error.message}</p>
+          ) : (
+            <>
+              <FlagCounter flagCount={totalFlags} />
+              <Pagination totalPages={pages} currentPage={currentPage} />
+              <FlagsTable flags={data.getFlags} />
+              <Pagination totalPages={pages} currentPage={currentPage} />
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Index;

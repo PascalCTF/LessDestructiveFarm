@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import graphqlHTTP from 'express-graphql';
+import { createHandler } from 'graphql-http/lib/use/express';
 import { makeSchema } from './graphql-schema';
 import { makeClientApiRouter } from './client-api';
 
@@ -25,9 +25,8 @@ const makeApiRouter = async () => {
   const schema = await makeSchema();
   api.use(
     '/graphql',
-    graphqlHTTP({
-      schema,
-      graphiql: true
+    createHandler({
+      schema
     })
   );
 

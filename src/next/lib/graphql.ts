@@ -1,8 +1,20 @@
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { ApolloClient } from 'apollo-client';
-import { HttpLink } from 'apollo-link-http';
-import gql from 'graphql-tag';
-import fetch from 'isomorphic-unfetch';
+import { ApolloClient, gql, HttpLink, InMemoryCache, TypedDocumentNode } from '@apollo/client';
+import { FlagState } from 'src/lib/models/flag';
+
+declare module '@apollo/client' {
+  namespace ApolloClient {
+    namespace DeclareDefaultOptions {
+      // Affects client.watchQuery() and React hooks (useQuery, useSuspenseQuery, etc.)
+      interface WatchQuery {
+        errorPolicy: 'ignore';
+      }
+      // Affects client.query()
+      interface Query {
+        errorPolicy: 'all';
+      }
+    }
+  }
+}
 
 export const queries = {
   GET_ALL_DATA: gql`
@@ -12,8 +24,8 @@ export const queries = {
       $flag: String
       $sploit: String
       $team: String
-      $since: DateTime
-      $until: DateTime
+      $since: DateTimeISO
+      $until: DateTimeISO
       $status: String
       $checksystem_response: String
     ) {
@@ -53,13 +65,44 @@ export const queries = {
         flagFormat
       }
     }
-  `,
+  ` as TypedDocumentNode<
+    {
+      getFlags: {
+        flag: string;
+        sploit: string;
+        team: string;
+        timestamp: Date;
+        status: FlagState;
+        checksystem_response: string;
+      }[];
+      getFlagCount: string;
+      getSearchValues: {
+        sploits: string[];
+        teams: string[];
+        statuses: string[];
+      };
+      getGameInfo: {
+        flagFormat: string;
+      };
+    },
+    {
+      offset: number;
+      limit: number;
+      flag: string;
+      sploit: string;
+      team: string;
+      since: Date;
+      until: Date;
+      status: string;
+      checksystem_response: string;
+    }
+  >,
   POST_FLAGS: gql`
     mutation PostFlags($flags: [String!]!) {
       postFlags(flags: $flags)
     }
-  `
-};
+  ` as TypedDocumentNode<{ postFlags: boolean }, { flags: string[] }>
+} as const;
 
 const token = '1';
 
@@ -81,8 +124,7 @@ export const apolloClient = new ApolloClient({
     uri,
     headers: {
       Authorization: token ? `Bearer ${token}` : ''
-    },
-    fetch
+    }
   }),
   cache: new InMemoryCache(),
   defaultOptions: {

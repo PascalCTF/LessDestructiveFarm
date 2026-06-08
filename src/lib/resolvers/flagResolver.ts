@@ -9,7 +9,8 @@ import {
   Mutation,
   ObjectType,
   Query,
-  Resolver
+  Resolver,
+  GraphQLISODateTime
 } from 'type-graphql';
 import Flag from '../models/flag';
 
@@ -29,12 +30,12 @@ class GetFlagsCountArgs {
 
   @IsOptional()
   @IsDate()
-  @Field({ nullable: true })
+  @Field(() => GraphQLISODateTime, { nullable: true })
   since?: Date;
 
   @IsOptional()
   @IsDate()
-  @Field({ nullable: true })
+  @Field(() => GraphQLISODateTime, { nullable: true })
   until?: Date;
 
   @IsOptional()

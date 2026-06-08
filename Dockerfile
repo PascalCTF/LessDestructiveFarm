@@ -1,11 +1,11 @@
-FROM node:16
+FROM node:24
 
 WORKDIR /usr/src/app
 
 ADD ./package.json .
 ADD ./package-lock.json .
 
-RUN npm i
+RUN npm ci --include=dev
 
 RUN npx next telemetry disable
 

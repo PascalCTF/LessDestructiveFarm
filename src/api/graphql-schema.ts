@@ -4,10 +4,9 @@ import resolvers from '../lib/resolvers';
 
 const makeSchema = async () => {
   return await buildSchema({
-    resolvers,
+    resolvers: resolvers,
     emitSchemaFile: {
-      path: path.join(__dirname, '../../schema.gql'),
-      commentDescriptions: true
+      path: path.join(__dirname, '../../schema.gql')
     }
   });
 };

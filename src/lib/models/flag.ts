@@ -1,5 +1,5 @@
 import { Column, Model, Table, Index, DataType } from 'sequelize-typescript';
-import { Field, ObjectType } from 'type-graphql';
+import { Field, ObjectType, GraphQLISODateTime } from 'type-graphql';
 
 export type FlagState = 'QUEUED' | 'SKIPPED' | 'ACCEPTED' | 'REJECTED';
 
@@ -18,7 +18,7 @@ export default class Flag extends Model<Flag> {
   @Column({ allowNull: false, type: DataType.TEXT })
   team!: string;
 
-  @Field()
+  @Field(() => GraphQLISODateTime)
   @Column({ allowNull: false })
   @Index({ name: 'Flag_status_timestamp' })
   timestamp!: Date;

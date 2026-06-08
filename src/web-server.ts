@@ -31,7 +31,7 @@ export const initWebServer = async (error?: any) => {
     server.use('/public', express.static('./public'));
 
     //TODO check if this is safe for production
-    server.get('*', (req, res) => {
+    server.get('/{*splat}', (req, res) => {
       return handle(req, res);
     });
   }
