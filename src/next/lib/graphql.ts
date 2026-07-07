@@ -104,7 +104,7 @@ export const queries = {
   ` as TypedDocumentNode<{ postFlags: boolean }, { flags: string[] }>
 } as const;
 
-const token = '1';
+
 
 let uri: string;
 if (typeof window !== 'undefined') {
@@ -118,13 +118,16 @@ if (typeof window !== 'undefined') {
   uri = 'http://127.0.0.1:3000/api/graphql';
 }
 
+let basicAuth = '';
+if (typeof window === 'undefined' && process.env.BASIC_AUTH) {
+  basicAuth = 'Basic ' + Buffer.from(process.env.BASIC_AUTH).toString('base64');
+}
+
 export const apolloClient = new ApolloClient({
   ssrMode: typeof window === 'undefined', // Disables forceFetch on the server (so queries are only run once)
   link: new HttpLink({
     uri,
-    headers: {
-      Authorization: token ? `Bearer ${token}` : ''
-    }
+    headers: basicAuth ? { Authorization: basicAuth } : undefined
   }),
   cache: new InMemoryCache(),
   defaultOptions: {
